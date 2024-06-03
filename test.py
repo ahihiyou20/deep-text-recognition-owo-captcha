@@ -153,7 +153,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
                 pred = re.sub(out_of_alphanumeric_case_insensitve, '', pred)
                 gt = re.sub(out_of_alphanumeric_case_insensitve, '', gt)
 
-            print(f"Prediction: {pred} | Ground Truth: {gt} ({pred == gt}")
             if pred == gt:
                 n_correct += 1
 
@@ -180,6 +179,8 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             except:
                 confidence_score = 0  # for empty pred case, when prune after "end of sentence" token ([s])
             confidence_score_list.append(confidence_score)
+
+            print(f"Prediction: {pred} ({pred == gt}) | Ground Truth: {gt} | Confidence: {confidence_score}")
             # print(pred, gt, pred==gt, confidence_score)
 
     accuracy = n_correct / float(length_of_data) * 100
