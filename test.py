@@ -180,7 +180,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
                 confidence_score = 0  # for empty pred case, when prune after "end of sentence" token ([s])
             confidence_score_list.append(confidence_score)
 
-            print(f"Prediction: {pred} ({pred == gt}) | Ground Truth: {gt} | Confidence: {confidence_score}")
+            print(f"Ground Truth: {gt} | Prediction: {pred.rjust(6)} ({pred == gt}) | Confidence: {confidence_score:.3f}")
             # print(pred, gt, pred==gt, confidence_score)
 
     accuracy = n_correct / float(length_of_data) * 100
@@ -254,7 +254,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_max_length', type=int, default=6, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=32, help='the height of the input image')
     parser.add_argument('--imgW', type=int, default=100, help='the width of the input image')
-    parser.add_argument('--rgb', action='store_true', help='use rgb input')
+    parser.add_argument('--rgb', action='store_true', default=True, help='use rgb input')
     parser.add_argument('--character', type=str, default='abcdefghijklmnopqrstuvwxyz', help='character label')
     parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
     parser.add_argument('--PAD', action='store_true', default=True, help='whether to keep ratio then pad for image resize')
