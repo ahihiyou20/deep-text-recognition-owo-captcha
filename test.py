@@ -155,6 +155,8 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
             if pred == gt:
                 n_correct += 1
+            else:
+                print(f"Ground Truth: {gt.rjust(6)} | Prediction: {pred.rjust(6)} ({pred == gt}) | Confidence: {(confidence_score*100):.3f}%")
 
             '''
             (old version) ICDAR2017 DOST Normalized Edit Distance https://rrc.cvc.uab.es/?ch=7&com=tasks
@@ -179,8 +181,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             except:
                 confidence_score = 0  # for empty pred case, when prune after "end of sentence" token ([s])
             confidence_score_list.append(confidence_score)
-
-            print(f"Ground Truth: {gt.rjust(6)} | Prediction: {pred.rjust(6)} ({pred == gt}) | Confidence: {(confidence_score*100):.3f}%")
 
     accuracy = n_correct / float(length_of_data) * 100
     norm_ED = norm_ED / float(length_of_data)  # ICDAR2019 Normalized Edit Distance
