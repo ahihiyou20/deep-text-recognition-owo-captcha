@@ -156,7 +156,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             if pred == gt:
                 n_correct += 1
             else:
-                print(f"Ground Truth: {gt.rjust(6)} | Prediction: {pred.rjust(6)} ({pred == gt})")
+                print(f"Ground Truth: {gt.rjust(6)} | Prediction: {pred.rjust(6)}")
 
             '''
             (old version) ICDAR2017 DOST Normalized Edit Distance https://rrc.cvc.uab.es/?ch=7&com=tasks
