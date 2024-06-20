@@ -267,12 +267,12 @@ if __name__ == '__main__':
                         help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
     parser.add_argument('--Prediction', type=str, default="Attn", help='Prediction stage. CTC|Attn')
-    parser.add_argument('--num_fiducial', type=int, default=10, help='number of fiducial points of TPS-STN')
+    parser.add_argument('--num_fiducial', type=int, default=20, help='number of fiducial points of TPS-STN')
     parser.add_argument('--input_channel', type=int, default=1,
                         help='the number of input channel of Feature extractor')
     parser.add_argument('--output_channel', type=int, default=512,
                         help='the number of output channel of Feature extractor')
-    parser.add_argument('--hidden_size', type=int, default=512, help='the size of the LSTM hidden state')
+    parser.add_argument('--hidden_size', type=int, default=256, help='the size of the LSTM hidden state')
 
     opt = parser.parse_args()
 
