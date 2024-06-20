@@ -254,15 +254,15 @@ if __name__ == '__main__':
                         help='total data usage ratio, this ratio is multiplied to total number of data.')
     parser.add_argument('--batch_max_length', type=int, default=6, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=60, help='the height of the input image')
-    parser.add_argument('--imgW', type=int, default=200, help='the width of the input image')
+    parser.add_argument('--imgW', type=int, default=100, help='the width of the input image')
     parser.add_argument('--rgb', default=True, action='store_true', help='use rgb input')
     parser.add_argument('--character', type=str,
                         default='abcdefghijklmnopqrstuvwxyz', help='character label')
     parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
-    parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
+    parser.add_argument('--PAD', default=True, action='store_true', help='whether to keep ratio then pad for image resize')
     parser.add_argument('--data_filtering_off', action='store_true', help='for data_filtering_off mode')
     """ Model Architecture """
-    parser.add_argument('--Transformation', type=str, default='TPS', help='Transformation stage. None|TPS')
+    parser.add_argument('--Transformation', type=str, default='None', help='Transformation stage. None|TPS')
     parser.add_argument('--FeatureExtraction', type=str, default='ResNet',
                         help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
