@@ -93,9 +93,6 @@ def train(opt):
                 param.data.fill_(1)
             continue
 
-    # Initializing Learning Rate Scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=0, min_lr=1e-10)
-
     # Adding Early Stopping
     early_stopping = EarlyStopper(patience=3, min_delta=0.01)
 
@@ -104,12 +101,11 @@ def train(opt):
     model.train()
     if opt.saved_model != '':
         print(f'loading pretrained model from {opt.saved_model}')
+        checkpoint = torch.load(opt.saved_model)
         if opt.FT:
-            model.load_state_dict(torch.load(opt.saved_model)["net"], strict=False)
+            model.load_state_dict(checkpoint["net"], strict=False)
         else:
-            checkpoint = torch.load(opt.saved_model)
             model.load_state_dict(checkpoint["net"])
-            scheduler.load_state_dict(checkpoint["scheduler"])
 
     print("Model:")
     print(model)
@@ -141,6 +137,12 @@ def train(opt):
         optimizer = optim.Adam(filtered_parameters, lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
     else:
         optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps)
+
+    # Initializing Learning Rate Scheduler
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=0, min_lr=1e-10)
+
+    if opt.saved_model != '':
+        scheduler.load_state_dict(torch.load(opt.saved_model)["scheduler"])
 
     print("Optimizer:")
     print(optimizer)
