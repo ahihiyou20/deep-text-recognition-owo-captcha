@@ -18,6 +18,23 @@ from model import Model
 from test import validation
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+class EarlyStopper:
+    def __init__(self, patience=3, min_delta=0.01):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = float('inf')
+
+    def early_stop(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+        elif validation_loss > (self.min_validation_loss + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+
 
 def train(opt):
     """ dataset preparation """
@@ -56,6 +73,7 @@ def train(opt):
     if opt.rgb:
         opt.input_channel = 3
     model = Model(opt)
+
     print('model input parameters', opt.imgH, opt.imgW, opt.num_fiducial, opt.input_channel, opt.output_channel,
           opt.hidden_size, opt.num_class, opt.batch_max_length, opt.Transformation, opt.FeatureExtraction,
           opt.SequenceModeling, opt.Prediction)
@@ -75,15 +93,24 @@ def train(opt):
                 param.data.fill_(1)
             continue
 
+    # Initializing Learning Rate Scheduler
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=0, min_lr=1e-10)
+
+    # Adding Early Stopping
+    early_stopping = EarlyStopper(patience=3, min_delta=0.01)
+
     # data parallel for multi-GPU
     model = torch.nn.DataParallel(model).to(device)
     model.train()
     if opt.saved_model != '':
         print(f'loading pretrained model from {opt.saved_model}')
         if opt.FT:
-            model.load_state_dict(torch.load(opt.saved_model), strict=False)
+            model.load_state_dict(torch.load(opt.saved_model)["net"], strict=False)
         else:
-            model.load_state_dict(torch.load(opt.saved_model))
+            checkpoint = torch.load(opt.saved_model)
+            model.load_state_dict(checkpoint["net"])
+            scheduler.load_state_dict(checkpoint["scheduler"])
+
     print("Model:")
     print(model)
 
@@ -114,8 +141,11 @@ def train(opt):
         optimizer = optim.Adam(filtered_parameters, lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
     else:
         optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps)
+
     print("Optimizer:")
     print(optimizer)
+    print("Scheduler:")
+    print(scheduler)
 
     """ final options """
     # print(opt)
@@ -182,6 +212,7 @@ def train(opt):
                         model, criterion, valid_loader, converter, opt)
                 model.train()
 
+
                 # training loss and validation loss
                 loss_log = f'[{iteration+1}/{opt.num_iter}] Train loss: {loss_avg.val():0.5f}, Valid loss: {valid_loss:0.5f}, Elapsed_time: {elapsed_time:0.5f}'
                 loss_avg.reset()
@@ -191,10 +222,17 @@ def train(opt):
                 # keep best accuracy model (on valid dataset)
                 if current_accuracy > best_accuracy:
                     best_accuracy = current_accuracy
-                    torch.save(model.state_dict(), f'./saved_models/{opt.exp_name}/best_accuracy.pth')
+                    torch.save({
+                        "net": model.state_dict(),
+                        "scheduler": scheduler.state_dict()
+                    }, f'./saved_models/{opt.exp_name}/best_accuracy.pth')
                 if current_norm_ED > best_norm_ED:
                     best_norm_ED = current_norm_ED
-                    torch.save(model.state_dict(), f'./saved_models/{opt.exp_name}/best_norm_ED.pth')
+                    torch.save({
+                        "net": model.state_dict(),
+                        "scheduler": scheduler.state_dict()
+                    }, f'./saved_models/{opt.exp_name}/best_norm_ED.pth')
+
                 best_model_log = f'{"Best_accuracy":17s}: {best_accuracy:0.3f}, {"Best_norm_ED":17s}: {best_norm_ED:0.2f}'
 
                 loss_model_log = f'{loss_log}\n{current_model_log}\n{best_model_log}'
@@ -215,10 +253,20 @@ def train(opt):
                 print(predicted_result_log)
                 log.write(predicted_result_log + '\n')
 
+                # Early Stopping
+                if early_stopper.early_stop(valid_loss):
+                    print("Training stopped early as no progress was made")
+                    sys.exit()
+
+                # ReduceOnPlateau scheduler step
+                scheduler.step(valid_loss)
+
         # save model per 1e+5 iter.
         if (iteration + 1) % 1e+5 == 0:
-            torch.save(
-                model.state_dict(), f'./saved_models/{opt.exp_name}/iter_{iteration+1}.pth')
+            torch.save({
+                "net": model.state_dict(),
+                "scheduler": scheduler.state_dict()
+            }, f'./saved_models/{opt.exp_name}/iter_{iteration+1}.pth')
 
         if (iteration + 1) == opt.num_iter:
             print('end the training')
@@ -233,13 +281,13 @@ if __name__ == '__main__':
     parser.add_argument('--valid_data', required=True, help='path to validation dataset')
     parser.add_argument('--manualSeed', type=int, default=1111, help='for random seed setting')
     parser.add_argument('--workers', type=int, default=0, help='number of data loading workers')
-    parser.add_argument('--batch_size', type=int, default=256, help='input batch size')
-    parser.add_argument('--num_iter', type=int, default=100000, help='number of iterations to train for')
-    parser.add_argument('--valInterval', type=int, default=1000, help='Interval between each validation')
+    parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
+    parser.add_argument('--num_iter', type=int, default=10000, help='number of iterations to train for')
+    parser.add_argument('--valInterval', type=int, default=250, help='Interval between each validation')
     parser.add_argument('--saved_model', default='', help="path to model to continue training")
     parser.add_argument('--FT', action='store_true', help='whether to do fine-tuning')
-    parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is Adadelta)')
-    parser.add_argument('--lr', type=float, default=1, help='learning rate, default=1.0 for Adadelta')
+    parser.add_argument('--adam', default=True, action='store_true', help='Whether to use adam (default is Adadelta)')
+    parser.add_argument('--lr', type=float, default=1e-3, help='learning rate, default=1.0 for Adadelta')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--rho', type=float, default=0.95, help='decay rate rho for Adadelta. default=0.95')
     parser.add_argument('--eps', type=float, default=1e-8, help='eps for Adadelta. default=1e-8')
@@ -262,7 +310,7 @@ if __name__ == '__main__':
     parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
     parser.add_argument('--data_filtering_off', action='store_true', help='for data_filtering_off mode')
     """ Model Architecture """
-    parser.add_argument('--Transformation', type=str, default='TPS', help='Transformation stage. None|TPS')
+    parser.add_argument('--Transformation', type=str, default='None', help='Transformation stage. None|TPS')
     parser.add_argument('--FeatureExtraction', type=str, default='ResNet',
                         help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
@@ -272,7 +320,7 @@ if __name__ == '__main__':
                         help='the number of input channel of Feature extractor')
     parser.add_argument('--output_channel', type=int, default=512,
                         help='the number of output channel of Feature extractor')
-    parser.add_argument('--hidden_size', type=int, default=256, help='the size of the LSTM hidden state')
+    parser.add_argument('--hidden_size', type=int, default=128, help='the size of the LSTM hidden state')
 
     opt = parser.parse_args()
 
