@@ -156,7 +156,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             if pred == gt:
                 n_correct += 1
             else:
-                if n_correct > 0:
+                if n_correct > 10:
                     print(f"Ground Truth: {gt.rjust(6)} | Prediction: {pred.rjust(6)}")
 
             '''
@@ -207,7 +207,7 @@ def test(opt):
 
     # load model
     print('loading pretrained model from %s' % opt.saved_model)
-    model.load_state_dict(torch.load(opt.saved_model, map_location=device))
+    model.load_state_dict(torch.load(opt.saved_model, map_location=device)["net"])
     opt.exp_name = '_'.join(opt.saved_model.split('/')[1:])
     # print(model)
 
@@ -248,7 +248,7 @@ if __name__ == '__main__':
     parser.add_argument('--eval_data', required=True, help='path to evaluation dataset')
     parser.add_argument('--benchmark_all_eval', action='store_true', help='evaluate 10 benchmark evaluation datasets')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=0)
-    parser.add_argument('--batch_size', type=int, default=256, help='input batch size')
+    parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
     parser.add_argument('--saved_model', required=True, help="path to saved_model to evaluation")
     """ Data processing """
     parser.add_argument('--batch_max_length', type=int, default=6, help='maximum-label-length')
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_filtering_off', action='store_true', help='for data_filtering_off mode')
     parser.add_argument('--baiduCTC', action='store_true', help='for data_filtering_off mode')
     """ Model Architecture """
-    parser.add_argument('--Transformation', type=str, default='TPS', help='Transformation stage. None|TPS')
+    parser.add_argument('--Transformation', type=str, default='None', help='Transformation stage. None|TPS')
     parser.add_argument('--FeatureExtraction', type=str, default='ResNet', help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
     parser.add_argument('--Prediction', type=str, default='Attn', help='Prediction stage. CTC|Attn')
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     parser.add_argument('--input_channel', type=int, default=1, help='the number of input channel of Feature extractor')
     parser.add_argument('--output_channel', type=int, default=512,
                         help='the number of output channel of Feature extractor')
-    parser.add_argument('--hidden_size', type=int, default=256, help='the size of the LSTM hidden state')
+    parser.add_argument('--hidden_size', type=int, default=128, help='the size of the LSTM hidden state')
 
     opt = parser.parse_args()
 
