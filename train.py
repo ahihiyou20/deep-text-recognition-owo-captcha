@@ -256,7 +256,7 @@ def train(opt):
                 log.write(predicted_result_log + '\n')
 
                 # Early Stopping
-                if early_stopper.early_stop(valid_loss):
+                if early_stopping.early_stop(valid_loss):
                     print("Training stopped early as no progress was made")
                     sys.exit()
 
