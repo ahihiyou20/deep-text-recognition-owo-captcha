@@ -248,7 +248,7 @@ if __name__ == '__main__':
     parser.add_argument('--eval_data', required=True, help='path to evaluation dataset')
     parser.add_argument('--benchmark_all_eval', action='store_true', help='evaluate 10 benchmark evaluation datasets')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=0)
-    parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
+    parser.add_argument('--batch_size', type=int, default=128, help='input batch size')
     parser.add_argument('--saved_model', required=True, help="path to saved_model to evaluation")
     """ Data processing """
     parser.add_argument('--batch_max_length', type=int, default=6, help='maximum-label-length')
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_filtering_off', action='store_true', help='for data_filtering_off mode')
     parser.add_argument('--baiduCTC', action='store_true', help='for data_filtering_off mode')
     """ Model Architecture """
-    parser.add_argument('--Transformation', type=str, default='None', help='Transformation stage. None|TPS')
+    parser.add_argument('--Transformation', type=str, default='TPS', help='Transformation stage. None|TPS')
     parser.add_argument('--FeatureExtraction', type=str, default='ResNet', help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
     parser.add_argument('--Prediction', type=str, default='Attn', help='Prediction stage. CTC|Attn')
