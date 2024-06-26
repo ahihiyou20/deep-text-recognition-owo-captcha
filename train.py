@@ -18,8 +18,10 @@ from model import Model
 from test import validation
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+
+# ADDITIONAL ULTILITY CLASSES
 class EarlyStopper:
-    def __init__(self, patience=3, min_delta=0.01):
+    def __init__(self, patience=16, min_delta=0.001):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
@@ -34,6 +36,8 @@ class EarlyStopper:
             if self.counter >= self.patience:
                 return True
         return False
+
+##########
 
 
 def train(opt):
@@ -94,7 +98,7 @@ def train(opt):
             continue
 
     # Adding Early Stopping
-    early_stopping = EarlyStopper(patience=3, min_delta=0.01)
+    early_stopping = EarlyStopper(patience=50, min_delta=0.01)
 
     # data parallel for multi-GPU
     model = torch.nn.DataParallel(model).to(device)
@@ -134,12 +138,12 @@ def train(opt):
 
     # setup optimizer
     if opt.adam:
-        optimizer = optim.Adam(filtered_parameters, lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=0.001)
+        optimizer = optim.Adam(filtered_parameters, lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=5e-4)
     else:
-        optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps)
+        optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps, weight_decay=5e-4)
 
     # Initializing Learning Rate Scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=0, min_lr=1e-10)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, min_lr=1e-10)
 
     if opt.saved_model != '':
         scheduler.load_state_dict(torch.load(opt.saved_model)["scheduler"])
@@ -262,6 +266,7 @@ def train(opt):
 
                 # ReduceOnPlateau scheduler step
                 scheduler.step(valid_loss)
+                print(f"Current Learning Rate: {scheduler.get_last_lr()}")
 
         # save model per 1e+5 iter.
         if (iteration + 1) % 1e+5 == 0:
@@ -283,13 +288,13 @@ if __name__ == '__main__':
     parser.add_argument('--valid_data', required=True, help='path to validation dataset')
     parser.add_argument('--manualSeed', type=int, default=1111, help='for random seed setting')
     parser.add_argument('--workers', type=int, default=0, help='number of data loading workers')
-    parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
-    parser.add_argument('--num_iter', type=int, default=10000, help='number of iterations to train for')
-    parser.add_argument('--valInterval', type=int, default=250, help='Interval between each validation')
+    parser.add_argument('--batch_size', type=int, default=128, help='input batch size')
+    parser.add_argument('--num_iter', type=int, default=100000, help='number of iterations to train for')
+    parser.add_argument('--valInterval', type=int, default=1, help='Interval between each validation')
     parser.add_argument('--saved_model', default='', help="path to model to continue training")
     parser.add_argument('--FT', action='store_true', help='whether to do fine-tuning')
     parser.add_argument('--adam', default=True, action='store_true', help='Whether to use adam (default is Adadelta)')
-    parser.add_argument('--lr', type=float, default=1e-3, help='learning rate, default=1.0 for Adadelta')
+    parser.add_argument('--lr', type=float, default=1e-2, help='learning rate, default=1.0 for Adadelta')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--rho', type=float, default=0.95, help='decay rate rho for Adadelta. default=0.95')
     parser.add_argument('--eps', type=float, default=1e-8, help='eps for Adadelta. default=1e-8')
@@ -312,7 +317,7 @@ if __name__ == '__main__':
     parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
     parser.add_argument('--data_filtering_off', action='store_true', help='for data_filtering_off mode')
     """ Model Architecture """
-    parser.add_argument('--Transformation', type=str, default='None', help='Transformation stage. None|TPS')
+    parser.add_argument('--Transformation', type=str, default='TPS', help='Transformation stage. None|TPS')
     parser.add_argument('--FeatureExtraction', type=str, default='ResNet',
                         help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
