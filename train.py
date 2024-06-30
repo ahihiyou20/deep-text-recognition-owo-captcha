@@ -21,7 +21,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # ADDITIONAL ULTILITY CLASSES
 class EarlyStopper:
-    def __init__(self, patience=16, min_delta=0.001):
+    def __init__(self, patience=8, min_delta=0.001):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
@@ -98,7 +98,7 @@ def train(opt):
             continue
 
     # Adding Early Stopping
-    early_stopping = EarlyStopper(patience=5, min_delta=0.01)
+    early_stopping = EarlyStopper(patience=8, min_delta=0.01)
 
     # data parallel for multi-GPU
     model = torch.nn.DataParallel(model).to(device)
@@ -138,12 +138,12 @@ def train(opt):
 
     # setup optimizer
     if opt.adam:
-        optimizer = optim.Adam(filtered_parameters, lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=5e-4)
+        optimizer = optim.Adam(filtered_parameters, lr=opt.lr, betas=(opt.beta1, 0.999), weight_decay=1e-4)
     else:
-        optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps, weight_decay=5e-4)
+        optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps, weight_decay=1e-4)
 
     # Initializing Learning Rate Scheduler
-    scheduler = optim.lr_scheduler.StepLR(optimizer, 2000, gamma=0.1, last_epoch=-1)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.9, patience=2)
 
     if opt.saved_model != '':
         scheduler.load_state_dict(torch.load(opt.saved_model)["scheduler"])
@@ -204,7 +204,6 @@ def train(opt):
         cost.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), opt.grad_clip)  # gradient clipping with 5 (Default)
         optimizer.step()
-        scheduler.step()
         print(f"Current Learning Rate: {scheduler.get_last_lr()}")
 
         loss_avg.add(cost)
@@ -266,6 +265,9 @@ def train(opt):
                     print("Training stopped early as no progress was made")
                     sys.exit()
 
+                # ReduceOnPlateau step
+                scheduler.step(valid_loss)
+
         # save model per 1e+5 iter.
         if (iteration + 1) % 1e+5 == 0:
             torch.save({
@@ -288,7 +290,7 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, default=0, help='number of data loading workers')
     parser.add_argument('--batch_size', type=int, default=128, help='input batch size')
     parser.add_argument('--num_iter', type=int, default=100000, help='number of iterations to train for')
-    parser.add_argument('--valInterval', type=int, default=250, help='Interval between each validation')
+    parser.add_argument('--valInterval', type=int, default=500, help='Interval between each validation')
     parser.add_argument('--saved_model', default='', help="path to model to continue training")
     parser.add_argument('--FT', action='store_true', help='whether to do fine-tuning')
     parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is Adadelta)')
@@ -307,7 +309,7 @@ if __name__ == '__main__':
                         help='total data usage ratio, this ratio is multiplied to total number of data.')
     parser.add_argument('--batch_max_length', type=int, default=6, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=60, help='the height of the input image')
-    parser.add_argument('--imgW', type=int, default=200, help='the width of the input image')
+    parser.add_argument('--imgW', type=int, default=100, help='the width of the input image')
     parser.add_argument('--rgb', default=True, action='store_true', help='use rgb input')
     parser.add_argument('--character', type=str,
                         default='abcdefghijklmnopqrstuvwxyz', help='character label')
@@ -325,7 +327,7 @@ if __name__ == '__main__':
                         help='the number of input channel of Feature extractor')
     parser.add_argument('--output_channel', type=int, default=512,
                         help='the number of output channel of Feature extractor')
-    parser.add_argument('--hidden_size', type=int, default=256, help='the size of the LSTM hidden state')
+    parser.add_argument('--hidden_size', type=int, default=512, help='the size of the LSTM hidden state')
 
     opt = parser.parse_args()
 
