@@ -21,7 +21,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # ADDITIONAL ULTILITY CLASSES
 class EarlyStopper:
-    def __init__(self, patience=8, min_delta=0.001):
+    def __init__(self, patience=30, min_delta=0.001):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
@@ -97,9 +97,6 @@ def train(opt):
                 param.data.fill_(1)
             continue
 
-    # Adding Early Stopping
-    early_stopping = EarlyStopper(patience=8, min_delta=0.01)
-
     # data parallel for multi-GPU
     model = torch.nn.DataParallel(model).to(device)
     model.train()
@@ -144,6 +141,8 @@ def train(opt):
 
     # Initializing Learning Rate Scheduler
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.9, patience=1, min_lr=1e-7)
+    # Adding Early Stopping
+    early_stopping = EarlyStopper(patience=20, min_delta=0.01)
 
     if opt.saved_model != '':
         scheduler.load_state_dict(torch.load(opt.saved_model)["scheduler"])
