@@ -7,6 +7,7 @@ class BidirectionalLSTM(nn.Module):
         super(BidirectionalLSTM, self).__init__()
         self.rnn = nn.LSTM(input_size, hidden_size, bidirectional=True, batch_first=True)
         self.linear = nn.Linear(hidden_size * 2, output_size)
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, input):
         """
@@ -15,5 +16,6 @@ class BidirectionalLSTM(nn.Module):
         """
         self.rnn.flatten_parameters()
         recurrent, _ = self.rnn(input)  # batch_size x T x input_size -> batch_size x T x (2*hidden_size)
+        recurrent = self.dropout(recurrent)
         output = self.linear(recurrent)  # batch_size x T x output_size
         return output
