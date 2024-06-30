@@ -143,7 +143,7 @@ def train(opt):
         optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps, weight_decay=1e-4)
 
     # Initializing Learning Rate Scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.9, patience=2)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.9, patience=1, min_lr=1e-7)
 
     if opt.saved_model != '':
         scheduler.load_state_dict(torch.load(opt.saved_model)["scheduler"])
