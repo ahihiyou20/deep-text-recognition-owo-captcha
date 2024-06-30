@@ -7,7 +7,7 @@ class BidirectionalLSTM(nn.Module):
         super(BidirectionalLSTM, self).__init__()
         self.rnn = nn.LSTM(input_size, hidden_size, bidirectional=True, batch_first=True)
         self.linear = nn.Linear(hidden_size * 2, output_size)
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.2)
 
     def forward(self, input):
         """
