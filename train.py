@@ -140,7 +140,7 @@ def train(opt):
         optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps, weight_decay=1e-4)
 
     # Initializing Learning Rate Scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.9, patience=1, min_lr=1e-7)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.7, patience=1, min_lr=1e-7)
     # Adding Early Stopping
     early_stopping = EarlyStopper(patience=20, min_delta=0.01)
 
@@ -289,7 +289,7 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, default=0, help='number of data loading workers')
     parser.add_argument('--batch_size', type=int, default=128, help='input batch size')
     parser.add_argument('--num_iter', type=int, default=100000, help='number of iterations to train for')
-    parser.add_argument('--valInterval', type=int, default=500, help='Interval between each validation')
+    parser.add_argument('--valInterval', type=int, default=250, help='Interval between each validation')
     parser.add_argument('--saved_model', default='', help="path to model to continue training")
     parser.add_argument('--FT', action='store_true', help='whether to do fine-tuning')
     parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is Adadelta)')
