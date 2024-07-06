@@ -253,7 +253,7 @@ if __name__ == '__main__':
     """ Data processing """
     parser.add_argument('--batch_max_length', type=int, default=6, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=60, help='the height of the input image')
-    parser.add_argument('--imgW', type=int, default=100, help='the width of the input image')
+    parser.add_argument('--imgW', type=int, default=200, help='the width of the input image')
     parser.add_argument('--rgb', action='store_true', default=True, help='use rgb input')
     parser.add_argument('--character', type=str, default='abcdefghijklmnopqrstuvwxyz', help='character label')
     parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
@@ -265,9 +265,9 @@ if __name__ == '__main__':
     parser.add_argument('--FeatureExtraction', type=str, default='ResNet', help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
     parser.add_argument('--Prediction', type=str, default='Attn', help='Prediction stage. CTC|Attn')
-    parser.add_argument('--num_fiducial', type=int, default=40, help='number of fiducial points of TPS-STN')
+    parser.add_argument('--num_fiducial', type=int, default=50, help='number of fiducial points of TPS-STN')
     parser.add_argument('--input_channel', type=int, default=1, help='the number of input channel of Feature extractor')
-    parser.add_argument('--output_channel', type=int, default=1024,
+    parser.add_argument('--output_channel', type=int, default=512,
                         help='the number of output channel of Feature extractor')
     parser.add_argument('--hidden_size', type=int, default=512, help='the size of the LSTM hidden state')
 
