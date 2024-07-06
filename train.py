@@ -21,7 +21,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # ADDITIONAL ULTILITY CLASSES
 class EarlyStopper:
-    def __init__(self, patience=30, min_delta=0.001):
+    def __init__(self, patience=20, min_delta=0.001):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
@@ -140,7 +140,7 @@ def train(opt):
         optimizer = optim.Adadelta(filtered_parameters, lr=opt.lr, rho=opt.rho, eps=opt.eps, weight_decay=1e-4)
 
     # Initializing Learning Rate Scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.7, patience=1, min_lr=1e-7)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=1, min_lr=1e-8)
     # Adding Early Stopping
     early_stopping = EarlyStopper(patience=20, min_delta=0.01)
 
@@ -297,7 +297,7 @@ if __name__ == '__main__':
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--rho', type=float, default=0.95, help='decay rate rho for Adadelta. default=0.95')
     parser.add_argument('--eps', type=float, default=1e-8, help='eps for Adadelta. default=1e-8')
-    parser.add_argument('--grad_clip', type=float, default=5, help='gradient clipping value. default=5')
+    parser.add_argument('--grad_clip', type=float, default=1, help='gradient clipping value. default=5')
     parser.add_argument('--baiduCTC', action='store_true', help='for data_filtering_off mode')
     """ Data processing """
     parser.add_argument('--select_data', type=str, default='/',
@@ -308,7 +308,7 @@ if __name__ == '__main__':
                         help='total data usage ratio, this ratio is multiplied to total number of data.')
     parser.add_argument('--batch_max_length', type=int, default=6, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=60, help='the height of the input image')
-    parser.add_argument('--imgW', type=int, default=100, help='the width of the input image')
+    parser.add_argument('--imgW', type=int, default=200, help='the width of the input image')
     parser.add_argument('--rgb', default=True, action='store_true', help='use rgb input')
     parser.add_argument('--character', type=str,
                         default='abcdefghijklmnopqrstuvwxyz', help='character label')
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_fiducial', type=int, default=50, help='number of fiducial points of TPS-STN')
     parser.add_argument('--input_channel', type=int, default=1,
                         help='the number of input channel of Feature extractor')
-    parser.add_argument('--output_channel', type=int, default=1024,
+    parser.add_argument('--output_channel', type=int, default=512,
                         help='the number of output channel of Feature extractor')
     parser.add_argument('--hidden_size', type=int, default=512, help='the size of the LSTM hidden state')
 
