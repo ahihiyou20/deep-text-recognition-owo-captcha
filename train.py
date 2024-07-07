@@ -142,7 +142,7 @@ def train(opt):
     # Initializing Learning Rate Scheduler
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=1, min_lr=1e-8)
     # Adding Early Stopping
-    early_stopping = EarlyStopper(patience=20, min_delta=0.01)
+    early_stopping = EarlyStopper(patience=15, min_delta=0.01)
 
     if opt.saved_model != '':
         scheduler.load_state_dict(torch.load(opt.saved_model)["scheduler"])
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     parser.add_argument('--valid_data', required=True, help='path to validation dataset')
     parser.add_argument('--manualSeed', type=int, default=1111, help='for random seed setting')
     parser.add_argument('--workers', type=int, default=0, help='number of data loading workers')
-    parser.add_argument('--batch_size', type=int, default=128, help='input batch size')
+    parser.add_argument('--batch_size', type=int, default=256, help='input batch size')
     parser.add_argument('--num_iter', type=int, default=100000, help='number of iterations to train for')
     parser.add_argument('--valInterval', type=int, default=250, help='Interval between each validation')
     parser.add_argument('--saved_model', default='', help="path to model to continue training")
@@ -313,11 +313,11 @@ if __name__ == '__main__':
     parser.add_argument('--character', type=str,
                         default='abcdefghijklmnopqrstuvwxyz', help='character label')
     parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
-    parser.add_argument('--PAD', default=True, action='store_true', help='whether to keep ratio then pad for image resize')
+    parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
     parser.add_argument('--data_filtering_off', action='store_true', help='for data_filtering_off mode')
     """ Model Architecture """
-    parser.add_argument('--Transformation', type=str, default='TPS', help='Transformation stage. None|TPS')
-    parser.add_argument('--FeatureExtraction', type=str, default='RCNN',
+    parser.add_argument('--Transformation', type=str, default='None', help='Transformation stage. None|TPS')
+    parser.add_argument('--FeatureExtraction', type=str, default='Resnet',
                         help='FeatureExtraction stage. VGG|RCNN|ResNet')
     parser.add_argument('--SequenceModeling', type=str, default='BiLSTM', help='SequenceModeling stage. None|BiLSTM')
     parser.add_argument('--Prediction', type=str, default="Attn", help='Prediction stage. CTC|Attn')
@@ -326,7 +326,7 @@ if __name__ == '__main__':
                         help='the number of input channel of Feature extractor')
     parser.add_argument('--output_channel', type=int, default=512,
                         help='the number of output channel of Feature extractor')
-    parser.add_argument('--hidden_size', type=int, default=512, help='the size of the LSTM hidden state')
+    parser.add_argument('--hidden_size', type=int, default=256, help='the size of the LSTM hidden state')
 
     opt = parser.parse_args()
 
